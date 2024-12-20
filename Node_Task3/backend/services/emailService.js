@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
 });
 
 exports.sendResetEmail = async (email, resetToken) =>{
-    const resetLink = `https://netlify-passwordreset-guvitask/${resetToken}`;
+    const resetLink = `https://netlify-passwordreset-guvitask1.netlify.app/${resetToken}`;
     await transporter.sendMail({
         from: 'no-reply@gmail.com',
         to: email,

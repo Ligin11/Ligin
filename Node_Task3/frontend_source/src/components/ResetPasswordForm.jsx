@@ -10,7 +10,7 @@ const ResetPasswordForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('https://nodetask3-t4to.onrender.com/api/auth/reset-password', { token, newPassword });
+            const response = await axios.post('https://liginnodetask3.onrender.com//api/auth/reset-password', { token, newPassword });
             setMessage(response.data);
         } catch (error) {
             setMessage(error.response?.data || 'Error resetting password');

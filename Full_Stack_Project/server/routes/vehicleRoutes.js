@@ -1,5 +1,5 @@
 const express = require('express');
-const { getVehicles, bookVehicle, cancelBooking, addReview } = require('../controllers/vehicleController');
+const { getVehicles, bookVehicle, cancelBooking, addReview, deleteVehicle, updateVehicle, checkAvailability } = require('../controllers/vehicleController');
 const { authenticateUser } = require('../middleware/authMiddleware');
 const router = express.Router();
 
@@ -14,5 +14,13 @@ router.post('/cancel', authenticateUser, cancelBooking);
 
 // Route to add a review to a vehicle
 router.post('/review', authenticateUser, addReview);
+
+// Delete a vehicle by ID
+router.delete('/:id', deleteVehicle);
+
+// Update a vehicle by ID
+router.put('/:id', updateVehicle);
+
+router.post('/check-availability', checkAvailability)
 
 module.exports = router;

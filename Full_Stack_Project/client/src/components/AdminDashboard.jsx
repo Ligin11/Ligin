@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 import API from '../utils/api';
 import axios from 'axios';
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ handleLogout }) => {
   const [vehicles, setVehicles] = useState([]);
   const [newVehicle, setNewVehicle] = useState({
     model: '',
@@ -13,6 +14,10 @@ const AdminDashboard = () => {
     image: '',
   });
   const [editingVehicle, setEditingVehicle] = useState(null);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [bookingHistory, setBookingHistory] = useState([]);
+  const [popupMessage, setPopupMessage] = useState('');
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     fetchVehicles();
@@ -20,25 +25,39 @@ const AdminDashboard = () => {
 
   const fetchVehicles = async () => {
     try {
-      const { data } = await API.get('/vehicles');
+      const { data } = await API.get('/admin/vehicles');
       setVehicles(data);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
     }
   };
 
+  const fetchBookingHistory = async (vehicleId) => {
+    try {
+      const { data } = await API.get(`/admin/vehicles/${vehicleId}/bookings`);
+      if (data.length === 0) {
+        setPopupMessage('No booking history found for this vehicle.');
+      } else {
+        setBookingHistory(data);
+        setSelectedVehicle(vehicleId);
+      }
+    } catch (error) {
+      console.error('Error fetching booking history:', error);
+      setPopupMessage('No Booking history found for this vehicle.');
+    }
+  };
+
   const handleImageUpload = async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', 'vehicle_preset'); // Replace with your Cloudinary upload preset
+    formData.append('upload_preset', 'vehicle_preset');
 
     try {
       const response = await axios.post(
         `https://api.cloudinary.com/v1_1/dnuwj6auu/image/upload`,
         formData
       );
-      console.log(response.data.secure_url);
-      return response.data.secure_url; // Cloudinary returns the uploaded image URL here
+      return response.data.secure_url;
     } catch (error) {
       console.error('Error uploading image:', error);
       return '';
@@ -48,11 +67,11 @@ const AdminDashboard = () => {
   const addVehicle = async () => {
     if (newVehicle.image) {
       const imageUrl = await handleImageUpload(newVehicle.image);
-      newVehicle.image = imageUrl; // Set the uploaded Cloudinary URL
+      newVehicle.image = imageUrl;
     }
 
     try {
-      await API.post('/admin/vehicle', newVehicle);
+      await API.post('/admin/vehicles', newVehicle);
       fetchVehicles();
     } catch (error) {
       console.error('Error adding vehicle:', error);
@@ -60,14 +79,14 @@ const AdminDashboard = () => {
   };
 
   const handleEdit = (vehicle) => {
-    setEditingVehicle(vehicle); // Set the selected vehicle for editing
+    setEditingVehicle(vehicle);
   };
 
   const handleDelete = async (vehicleId) => {
     try {
       await API.delete(`/vehicles/${vehicleId}`);
       alert('Vehicle deleted successfully!');
-      fetchVehicles(); // Refresh vehicle list
+      fetchVehicles();
     } catch (error) {
       console.error('Error deleting vehicle:', error);
       alert('Failed to delete vehicle.');
@@ -83,8 +102,8 @@ const AdminDashboard = () => {
 
       await API.put(`/vehicles/${editingVehicle._id}`, editingVehicle);
       alert('Vehicle updated successfully!');
-      setEditingVehicle(null); // Clear editing state
-      fetchVehicles(); // Refresh vehicle list
+      setEditingVehicle(null);
+      fetchVehicles();
     } catch (error) {
       console.error('Error updating vehicle:', error);
       alert('Failed to update vehicle.');
@@ -96,9 +115,17 @@ const AdminDashboard = () => {
     setEditingVehicle({ ...editingVehicle, [name]: value });
   };
 
+  const closePopup = () => {
+    setPopupMessage('');
+    setBookingHistory([]);
+    setSelectedVehicle(null);
+  };
+
   return (
     <div>
       <h2>Admin Dashboard</h2>
+      <button onClick={handleLogout}>Logout</button>
+      <button onClick={() => navigate('/admin/reviews')}>Review Management</button> {/* New Button */}
 
       {editingVehicle ? (
         <div>
@@ -178,9 +205,36 @@ const AdminDashboard = () => {
             <p>{vehicle.pricePerDay} per day</p>
             <button onClick={() => handleEdit(vehicle)}>Edit</button>
             <button onClick={() => handleDelete(vehicle._id)}>Delete</button>
+            <button onClick={() => fetchBookingHistory(vehicle._id)}>View Booking History</button>
           </div>
         ))}
       </div>
+
+      {popupMessage && (
+        <div className="popup">
+          <p>{popupMessage}</p>
+          <button onClick={closePopup}>Close</button>
+        </div>
+      )}
+
+      {selectedVehicle && bookingHistory.length > 0 && (
+        <div>
+          <h3>Booking History</h3>
+          <button onClick={closePopup}>Close</button>
+          <ul>
+            {bookingHistory.map((booking) => (
+              <li key={booking._id}>
+                <p>User: {booking.user?.name || 'N/A'} ({booking.user?.email || 'N/A'})</p>
+                <p>
+                  Dates: {new Date(booking.startDate).toLocaleDateString()} -{' '}
+                  {new Date(booking.endDate).toLocaleDateString()}
+                </p>
+                <p>Payment Status: {booking.paymentStatus}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

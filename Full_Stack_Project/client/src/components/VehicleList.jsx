@@ -1,20 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BookingForm from './BookingForm';
+import VehicleReviews from './VehicleReviews';
 import API from '../utils/api';
 
-const VehicleList = ({handleLogout}) => {
+const VehicleList = ({ handleLogout }) => {
   const [vehicles, setVehicles] = useState([]);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
-  const [filters, setFilters] = useState({ type: '', maxPrice: 1000 });
+  const [filters, setFilters] = useState({ type: '', minPrice: '', maxPrice: '' });
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchVehicles();
-    applyFilters();
-  },[]);
+  }, []);
 
+  useEffect(() => {
+    applyFilters();
+  }, [filters, searchQuery, vehicles]);
 
   const fetchVehicles = async () => {
     try {
@@ -22,17 +26,20 @@ const VehicleList = ({handleLogout}) => {
       setVehicles(data);
       setFilteredVehicles(data);
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching vehicles:', error);
     }
   };
 
   const applyFilters = () => {
-    const { type, maxPrice } = filters;
-    const filtered = vehicles.filter(
-      (vehicle) =>
-        (type === '' || vehicle.type.toLowerCase().includes(type.toLowerCase())) &&
-        vehicle.pricePerDay <= maxPrice
-    );
+    const { type, minPrice, maxPrice } = filters;
+    const filtered = vehicles.filter((vehicle) => {
+      const matchesSearch = searchQuery === '' || vehicle.model.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesType = type === '' || vehicle.type.toLowerCase().includes(type.toLowerCase());
+      const matchesPrice =
+        (minPrice === '' || vehicle.pricePerDay >= Number(minPrice)) &&
+        (maxPrice === '' || vehicle.pricePerDay <= Number(maxPrice));
+      return matchesSearch && matchesType && matchesPrice;
+    });
     setFilteredVehicles(filtered);
   };
 
@@ -41,12 +48,25 @@ const VehicleList = ({handleLogout}) => {
     setFilters({ ...filters, [name]: value });
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
 
   return (
     <div>
-      <button onClick={()=> navigate('/dashboard')}>Profile</button>
+      <button onClick={() => navigate('/dashboard')}>Profile</button>
       <button onClick={handleLogout}>Logout</button>
       <h2>Available Vehicles</h2>
+
+      {/* Search Input */}
+      <input
+        type="text"
+        placeholder="Search by model"
+        value={searchQuery}
+        onChange={handleSearchChange}
+      />
+
+      {/* Filters */}
       <div>
         <input
           type="text"
@@ -55,7 +75,13 @@ const VehicleList = ({handleLogout}) => {
           value={filters.type}
           onChange={handleFilterChange}
         />
-        
+        <input
+          type="number"
+          placeholder="Min Price"
+          name="minPrice"
+          value={filters.minPrice}
+          onChange={handleFilterChange}
+        />
         <input
           type="number"
           placeholder="Max Price"
@@ -64,20 +90,30 @@ const VehicleList = ({handleLogout}) => {
           onChange={handleFilterChange}
         />
       </div>
+
+      {/* Vehicle List */}
       <div>
-        {filteredVehicles.map((vehicle) => (
-          <div key={vehicle._id}>
-            <img src={vehicle.image} alt={vehicle.model} style={{ width: '100px', height: '100px' }} />
-            <h4>{vehicle.model}</h4>
-            <p>Price: {vehicle.pricePerDay} per day</p>
-            <button onClick={() => setSelectedVehicle(vehicle)}>Book Now</button>
-          </div>
-        ))}
+        {filteredVehicles.length > 0 ? (
+          filteredVehicles.map((vehicle) => (
+            <div key={vehicle._id}>
+              <img src={vehicle.image} alt={vehicle.model} style={{ width: '100px', height: '100px' }} />
+              <h4>{vehicle.model}</h4>
+              <p>Type: {vehicle.type}</p>
+              <p>Price: {vehicle.pricePerDay} per day</p>
+              <button onClick={() => setSelectedVehicle(vehicle)}>Book Now</button>
+            </div>
+          ))
+        ) : (
+          <p>No vehicles match your criteria.</p>
+        )}
       </div>
+
+      {/* Booking Form */}
       {selectedVehicle && (
         <div>
           <h3>Booking Form</h3>
           <BookingForm vehicle={selectedVehicle} />
+          <VehicleReviews vehicleId={selectedVehicle._id} />
           <button onClick={() => setSelectedVehicle(null)}>Close</button>
         </div>
       )}

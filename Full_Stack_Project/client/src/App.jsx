@@ -6,7 +6,9 @@ import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import VehicleList from './components/VehicleList';
 import Profile from './pages/Profile';
+import RegisterAdmin from './pages/RegisterAdmin'
 import PaymentPage from './components/PaymentPage';
+import ReviewModeration from './components/ReviewModeration'
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -19,6 +21,7 @@ const App = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('userId');
+    localStorage.removeItem('userEmail');
     setUser(null); // Reset user state
   };
 
@@ -49,10 +52,12 @@ const App = () => {
         )}
 
         {isAuthenticated && user.role === 'admin' && (
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin" element={<AdminDashboard handleLogout={handleLogout} />} />
         )}
 
         <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/register-admin" element={<RegisterAdmin />} />
+        <Route path="/admin/reviews" element={<ReviewModeration />} />
       </Routes>
     </Router>
   );

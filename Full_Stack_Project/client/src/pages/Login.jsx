@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import API from '../utils/api';
 
 const Login = ({ setUser }) => {
@@ -15,6 +15,7 @@ const Login = ({ setUser }) => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('userId', data.user._id);
+      localStorage.setItem('userEmail', data.user.email);
       setUser(data.user);
 // Redirect based on user role
 console.log(data.user.role)
@@ -53,6 +54,7 @@ setError(err.response?.data?.message || 'Login failed.');
           Register here
         </span>
       </p>
+      <p>Not an admin? <Link to='/register-admin'> Register as Admin</Link></p>
     </div>
   );
 };

@@ -4,9 +4,10 @@ import CancellationForm from './CancellationForm';
 import ReviewComponent from './ReviewComponent';
 
 const UserDashboard = () => {
-  const [profile, setProfile] = useState({ name: '', email: '' });
+  const [profile, setProfile] = useState({ _id:'', name: '', email: '' });
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const userId = localStorage.getItem('userId');
 
   useEffect(() => {
     fetchProfile();
@@ -34,11 +35,35 @@ const UserDashboard = () => {
 
   const fetchBookings = async () => {
     try {
+      const userId = profile._id || localStorage.getItem('userId');
       const { data } = await API.get('/users/bookings');
-      setBookings(data);
+      const updatedBookings = await Promise.all(
+        data.map(async (booking) => {
+          try {
+            console.log(profile._id)
+            const response = await API.get(`/reviews/user/${userId}/vehicle/${booking.vehicle._id}`);
+            return { ...booking, hasReview: response.data ? true : false };
+          } catch (error) {
+            if (error.response?.status === 404) {
+              return { ...booking, hasReview: false }; // No review exists
+            }
+            console.error('Error checking review:', error);
+            return { ...booking, hasReview: false };
+          }
+        })
+      );
+      setBookings(updatedBookings);
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const handleReviewSubmitted = (bookingId) => {
+    setBookings((prevBookings) =>
+      prevBookings.map((booking) =>
+        booking._id === bookingId ? { ...booking, hasReview: true } : booking
+      )
+    );
   };
 
   return (
@@ -75,8 +100,13 @@ const UserDashboard = () => {
             <button onClick={() => setSelectedBooking(booking)}>Cancel Booking</button>
 
             {/* Review Section */}
-            {booking.paymentStatus === 'Paid' && (
-              <ReviewComponent vehicleId={booking.vehicle._id} />
+            {booking.paymentStatus === 'paid' && !booking.hasReview && (
+              <ReviewComponent
+                vehicleId={booking.vehicle._id}
+                bookingId={booking._id}
+                userId={profile._id}
+                onReviewSubmitted={() => handleReviewSubmitted(booking._id)}
+              />
             )}
           </div>
         ))}
@@ -86,7 +116,7 @@ const UserDashboard = () => {
       {selectedBooking && (
         <div>
           <h3>Cancellation Form</h3>
-          <CancellationForm bookingId={selectedBooking._id} />
+          <CancellationForm bookingId={selectedBooking._id} fetchBookings={fetchBookings} />
           <button onClick={() => setSelectedBooking(null)}>Close</button>
         </div>
       )}

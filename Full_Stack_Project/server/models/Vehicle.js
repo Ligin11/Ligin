@@ -7,6 +7,7 @@ const vehicleSchema = mongoose.Schema({
   type: String,
   availability: Boolean,
   image: String,
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   reviews: [{ user: String, comment: String, rating: Number }],
 }, { timestamps: true });
 

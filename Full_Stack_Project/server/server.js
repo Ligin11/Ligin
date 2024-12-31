@@ -6,7 +6,13 @@ const bodyParser = require('body-parser');
 
 dotenv.config();
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: '*', // Replace with your frontend URLs
+  credentials: true, // Allow cookies if needed
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Specify allowed HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+}));
+
 app.use(bodyParser.json());
 
 // MongoDB Connection

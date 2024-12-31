@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
+import { useNavigate } from 'react-router-dom';
 import API from '../utils/api';
 import axios from 'axios';
 
@@ -17,7 +17,7 @@ const AdminDashboard = ({ handleLogout }) => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [bookingHistory, setBookingHistory] = useState([]);
   const [popupMessage, setPopupMessage] = useState('');
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchVehicles();
@@ -82,17 +82,6 @@ const AdminDashboard = ({ handleLogout }) => {
     setEditingVehicle(vehicle);
   };
 
-  const handleDelete = async (vehicleId) => {
-    try {
-      await API.delete(`/vehicles/${vehicleId}`);
-      alert('Vehicle deleted successfully!');
-      fetchVehicles();
-    } catch (error) {
-      console.error('Error deleting vehicle:', error);
-      alert('Failed to delete vehicle.');
-    }
-  };
-
   const handleUpdate = async () => {
     try {
       if (editingVehicle.image instanceof File) {
@@ -110,9 +99,15 @@ const AdminDashboard = ({ handleLogout }) => {
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditingVehicle({ ...editingVehicle, [name]: value });
+  const handleDelete = async (vehicleId) => {
+    try {
+      await API.delete(`/vehicles/${vehicleId}`);
+      alert('Vehicle deleted successfully!');
+      fetchVehicles();
+    } catch (error) {
+      console.error('Error deleting vehicle:', error);
+      alert('Failed to delete vehicle.');
+    }
   };
 
   const closePopup = () => {
@@ -122,119 +117,178 @@ const AdminDashboard = ({ handleLogout }) => {
   };
 
   return (
-    <div>
-      <h2>Admin Dashboard</h2>
-      <button onClick={handleLogout}>Logout</button>
-      <button onClick={() => navigate('/admin/reviews')}>Review Management</button> {/* New Button */}
-
-      {editingVehicle ? (
-        <div>
-          <h3>Edit Vehicle</h3>
-          <input
-            name="model"
-            value={editingVehicle.model}
-            onChange={handleInputChange}
-            placeholder="Model"
-          />
-          <input
-            name="year"
-            type="number"
-            value={editingVehicle.year}
-            onChange={handleInputChange}
-            placeholder="Year"
-          />
-          <input
-            name="pricePerDay"
-            type="number"
-            value={editingVehicle.pricePerDay}
-            onChange={handleInputChange}
-            placeholder="Price Per Day"
-          />
-          <input
-            name="type"
-            value={editingVehicle.type}
-            onChange={handleInputChange}
-            placeholder="Type"
-          />
-          <input
-            type="file"
-            onChange={(e) => setEditingVehicle({ ...editingVehicle, image: e.target.files[0] })}
-          />
-          <button onClick={handleUpdate}>Update Vehicle</button>
-          <button onClick={() => setEditingVehicle(null)}>Cancel</button>
-        </div>
-      ) : (
-        <div>
-          <h3>Add Vehicle</h3>
-          <input
-            placeholder="Model"
-            value={newVehicle.model}
-            onChange={(e) => setNewVehicle({ ...newVehicle, model: e.target.value })}
-          />
-          <input
-            placeholder="Year"
-            type="number"
-            value={newVehicle.year}
-            onChange={(e) => setNewVehicle({ ...newVehicle, year: e.target.value })}
-          />
-          <input
-            placeholder="Price Per Day"
-            type="number"
-            value={newVehicle.pricePerDay}
-            onChange={(e) => setNewVehicle({ ...newVehicle, pricePerDay: e.target.value })}
-          />
-          <input
-            placeholder="Type"
-            value={newVehicle.type}
-            onChange={(e) => setNewVehicle({ ...newVehicle, type: e.target.value })}
-          />
-          <input
-            type="file"
-            onChange={(e) => setNewVehicle({ ...newVehicle, image: e.target.files[0] })}
-          />
-          <button onClick={addVehicle}>Add Vehicle</button>
-        </div>
-      )}
-
-      <h3>Manage Vehicles</h3>
-      <div>
-        {vehicles.map((vehicle) => (
-          <div key={vehicle._id}>
-            <img src={vehicle.image} alt={vehicle.model} style={{ width: '100px', height: '100px' }} />
-            <h4>{vehicle.model}</h4>
-            <p>{vehicle.pricePerDay} per day</p>
-            <button onClick={() => handleEdit(vehicle)}>Edit</button>
-            <button onClick={() => handleDelete(vehicle._id)}>Delete</button>
-            <button onClick={() => fetchBookingHistory(vehicle._id)}>View Booking History</button>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-blue-700 p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-semibold text-white">Admin Dashboard</h2>
+          <div className="space-x-4">
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Logout
+            </button>
+            <button
+              onClick={() => navigate('/admin/reviews')}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Review Management
+            </button>
           </div>
-        ))}
+        </div>
+
+        {/* Add or Edit Vehicle */}
+        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+          <h3 className="text-xl font-semibold text-indigo-600 mb-4">
+            {editingVehicle ? 'Edit Vehicle' : 'Add Vehicle'}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              name="model"
+              placeholder="Model"
+              value={editingVehicle ? editingVehicle.model : newVehicle.model}
+              onChange={(e) =>
+                editingVehicle
+                  ? setEditingVehicle({ ...editingVehicle, model: e.target.value })
+                  : setNewVehicle({ ...newVehicle, model: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400"
+            />
+            <input
+              name="year"
+              type="number"
+              placeholder="Year"
+              value={editingVehicle ? editingVehicle.year : newVehicle.year}
+              onChange={(e) =>
+                editingVehicle
+                  ? setEditingVehicle({ ...editingVehicle, year: e.target.value })
+                  : setNewVehicle({ ...newVehicle, year: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400"
+            />
+            <input
+              name="pricePerDay"
+              type="number"
+              placeholder="Price Per Day"
+              value={editingVehicle ? editingVehicle.pricePerDay : newVehicle.pricePerDay}
+              onChange={(e) =>
+                editingVehicle
+                  ? setEditingVehicle({ ...editingVehicle, pricePerDay: e.target.value })
+                  : setNewVehicle({ ...newVehicle, pricePerDay: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400"
+            />
+            <input
+              name="type"
+              placeholder="Type"
+              value={editingVehicle ? editingVehicle.type : newVehicle.type}
+              onChange={(e) =>
+                editingVehicle
+                  ? setEditingVehicle({ ...editingVehicle, type: e.target.value })
+                  : setNewVehicle({ ...newVehicle, type: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400"
+            />
+            <input
+              type="file"
+              onChange={(e) =>
+                editingVehicle
+                  ? setEditingVehicle({ ...editingVehicle, image: e.target.files[0] })
+                  : setNewVehicle({ ...newVehicle, image: e.target.files[0] })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400"
+            />
+          </div>
+          <button
+            onClick={editingVehicle ? handleUpdate : addVehicle}
+            className="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            {editingVehicle ? 'Update Vehicle' : 'Add Vehicle'}
+          </button>
+        </div>
+
+        {/* Vehicle List */}
+        <h3 className="text-xl font-semibold text-white mb-4">Manage Vehicles</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {vehicles.map((vehicle) => (
+            <div
+              key={vehicle._id}
+              className="bg-white shadow-md rounded-lg p-4 flex flex-col items-center"
+            >
+              <img
+                src={vehicle.image}
+                alt={vehicle.model}
+                className="w-50 h-50 object-cover rounded-md mb-4"
+              />
+              <h4 className="text-lg font-semibold text-gray-800">{vehicle.model}</h4>
+              <p className="text-gray-600 mb-4">₹{vehicle.pricePerDay} per day</p>
+              <div className="space-x-2">
+                <button
+                  onClick={() => handleEdit(vehicle)}
+                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(vehicle._id)}
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => fetchBookingHistory(vehicle._id)}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  View Booking History
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Booking History */}
+        {popupMessage && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className='bg-white w-11/12 md:w-2/3 lg:w-1/2 rounded-lg shadow-lg overflow-y-auto max-h-[90vh] p-6'>
+            <p>{popupMessage}</p>
+            <button
+              onClick={closePopup}
+              className="mt-2 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              Close
+            </button>
+            </div>
+          </div>
+        )}
+
+        {selectedVehicle && bookingHistory.length > 0 && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className='bg-white w-11/12 md:w-2/3 lg:w-1/2 rounded-lg shadow-lg overflow-y-auto max-h-[90vh] p-6'>
+            <h3 className="text-xl font-semibold text-indigo-600 mb-4">Booking History</h3>
+            <button
+              onClick={closePopup}
+              className="mb-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Close
+            </button>
+            <ul className="space-y-4">
+              {bookingHistory.map((booking) => (
+                <li key={booking._id} className="border-b border-gray-200 pb-4">
+                  <p className="text-gray-800">
+                    User: {booking.user?.name || 'N/A'} ({booking.user?.email || 'N/A'})
+                  </p>
+                  <p className="text-gray-600">
+                    Dates: {new Date(booking.startDate).toLocaleDateString()} -{' '}
+                    {new Date(booking.endDate).toLocaleDateString()}
+                  </p>
+                  <p className="text-gray-600">Payment Status: {booking.paymentStatus}</p>
+                </li>
+              ))}
+            </ul>
+            </div>
+          </div>
+        )}
       </div>
-
-      {popupMessage && (
-        <div className="popup">
-          <p>{popupMessage}</p>
-          <button onClick={closePopup}>Close</button>
-        </div>
-      )}
-
-      {selectedVehicle && bookingHistory.length > 0 && (
-        <div>
-          <h3>Booking History</h3>
-          <button onClick={closePopup}>Close</button>
-          <ul>
-            {bookingHistory.map((booking) => (
-              <li key={booking._id}>
-                <p>User: {booking.user?.name || 'N/A'} ({booking.user?.email || 'N/A'})</p>
-                <p>
-                  Dates: {new Date(booking.startDate).toLocaleDateString()} -{' '}
-                  {new Date(booking.endDate).toLocaleDateString()}
-                </p>
-                <p>Payment Status: {booking.paymentStatus}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 };

@@ -41,23 +41,47 @@ const ReviewComponent = ({ vehicleId, bookingId, userId, onReviewSubmitted }) =>
   }
 
   return (
-    <div>
-      <h4>Add Review</h4>
-      <select value={rating} onChange={(e) => setRating(Number(e.target.value))}>
-        <option value="0">Select Rating</option>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <option key={star} value={star}>
-            {star} Star{star > 1 && 's'}
-          </option>
-        ))}
-      </select>
-      <textarea
-        placeholder="Write your review"
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-      ></textarea>
-      <button onClick={submitReview}>Submit Review</button>
-      {message && <p>{message}</p>}
+    <div className="bg-white shadow-lg rounded-lg p-6 max-w-md mx-auto animate-fade-in">
+      <h4 className="text-xl font-semibold text-indigo-600 text-center mb-4">Add Review</h4>
+      <form className="space-y-4">
+        <div>
+          <label className="block text-gray-600 mb-1">Rating</label>
+          <select
+            value={rating}
+            onChange={(e) => setRating(Number(e.target.value))}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+          >
+            <option value="0">Select Rating</option>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <option key={star} value={star}>
+                {star} Star{star > 1 && 's'}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-gray-600 mb-1">Review</label>
+          <textarea
+            placeholder="Write your review"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+            rows="4"
+          ></textarea>
+        </div>
+        <button
+          type="button"
+          onClick={submitReview}
+          className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+        >
+          Submit Review
+        </button>
+        {message && (
+          <p className={`text-center mt-2 ${message.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
+            {message}
+          </p>
+        )}
+      </form>
     </div>
   );
 };
